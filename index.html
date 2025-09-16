@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interface Répartition — Enseignants / Administration</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --green:#16a34a;
+      --red:#dc2626;
+      --border:#e5e7eb;
+    }
+    *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);padding:28px}
+    .container{max-width:1100px;margin:0 auto}
+    h1{margin:0 0 18px;font-size:20px}
+    .controls{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .btn{padding:10px 14px;border-radius:10px;cursor:pointer;border:none;font-weight:600;color:white}
+    .btn.primary{background:var(--green)}
+    .btn.danger{background:var(--red)}
+    .btn.secondary{background:#9ca3af;color:white}
+    .panel{background:#f9fafb;padding:16px;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+    .hidden{display:none}
+
+    /* Teacher view */
+    .teacher-form{display:flex;gap:10px;align-items:center}
+    input[type="text"]{padding:10px;border-radius:8px;border:1px solid var(--border);background:white;color:inherit;flex:1}
+    .teacher-card{margin-top:16px;padding:14px;border-radius:10px;background:#ffffff;display:flex;gap:14px;align-items:center;border:1px solid var(--border)}
+    .avatar{width:72px;height:72px;border-radius:10px;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .info{flex:1}
+    .info h2{margin:0 0 6px;font-size:16px}
+    .meta{color:var(--muted);font-size:13px}
+    .cycle-box{margin-top:10px;padding:10px;border-radius:8px;background:#f3f4f6;min-height:56px;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+    /* Admin view */
+    .filters{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    select, button.filter-clear{padding:8px;border-radius:8px;border:1px solid var(--border);background:white;color:inherit}
+    table{width:100%;border-collapse:collapse;margin-top:8px;background:white;border:1px solid var(--border)}
+    th,td{padding:8px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+    th{color:var(--muted);font-weight:600;background:#f9fafb}
+    .small{font-size:12px;color:var(--muted)}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+
+    @media (max-width:800px){.controls{flex-direction:column;align-items:stretch}.teacher-form{flex-direction:column;align-items:stretch}.filters{flex-direction:column;align-items:stretch}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Interface — Répartition enseignants</h1>
+    <div class="controls">
+      <button id="btnTeacher" class="btn primary">Enseignant</button>
+      <button id="btnAdmin" class="btn danger">Administration</button>
+      <div style="flex:1"></div>
+      <div class="small">Données chargées depuis <code>repartition.json</code></div>
+    </div>
+
+    <div id="viewTeacher" class="panel">
+      <div class="teacher-form">
+        <label for="phoneInput" class="small">Saisir numéro de téléphone :</label>
+        <input id="phoneInput" type="text" placeholder="Ex: 0671484864" />
+        <button id="lookupBtn" class="btn secondary">Rechercher</button>
+        <button id="clearCycle" class="btn secondary">Arrêter cycle</button>
+      </div>
+
+      <div id="teacherResult" class="hidden">
+        <div class="teacher-card">
+          <div class="avatar" id="avatar">A</div>
+          <div class="info">
+            <h2 id="teacherName"></h2>
+            <div class="meta">Téléphone: <span id="teacherTel"></span> · Mail: <span id="teacherMail"></span></div>
+            <div class="meta">Cycle(s): <span id="teacherCycles"></span></div>
+            <div class="cycle-box" id="cycleBox">Chargement des matières...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="teacherNotFound" class="hidden panel" style="margin-top:12px;color:#b91c1c;background:#fee2e2">Aucun enseignant trouvé pour ce numéro.</div>
+    </div>
+
+    <div id="adminPasswordPrompt" class="panel hidden">
+      <label for="adminPassword">Mot de passe administration :</label>
+      <input type="password" id="adminPassword" />
+      <button id="adminLoginBtn" class="btn primary">Entrer</button>
+    </div>
+
+    <div id="viewAdmin" class="panel hidden">
+      <div class="filters">
+        <select id="filterTeacher"><option value="">-- Filtrer par enseignant --</option></select>
+        <select id="filterSubject"><option value="">-- Filtrer par matière --</option></select>
+        <select id="filterLevel"><option value="">-- Filtrer par niveau (classe) --</option></select>
+        <button id="clearFilters" class="btn secondary">Réinitialiser</button>
+      </div>
+
+      <div id="adminTableWrap">
+        <table id="adminTable">
+          <thead>
+            <tr><th>Enseignant</th><th>Téléphone</th><th>Mail</th><th>Matière</th><th>Cycle</th><th>Classes</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>Conseil: placez <code>repartition.json</code> dans le même dossier que ce fichier pour que la lecture fonctionne (ou servez via un serveur local).</footer>
+  </div>
+
+  <script>
+    let data = [];
+    let cycleTimer = null;
+    let currentCycleIndex = 0;
+    let teacherSequence = [];
+    const ADMIN_PASSWORD = "1234"; // change ici le mot de passe souhaité
+
+    function normalizePhone(s){ if(!s) return ''; return s.toString().replace(/[^0-9]/g,''); }
+
+    async function loadData(){
+      try{
+        const res = await fetch('repartition.json');
+        if(!res.ok) throw new Error('Impossible de charger repartition.json');
+        data = await res.json();
+        buildAdminFilters();
+        populateAdminTable();
+      }catch(e){
+        console.error(e);
+        alert('Erreur lors du chargement de repartition.json — vérifie qu\'il est présent et accessible.');
+      }
+    }
+
+    function findByPhone(phone){
+      const n = normalizePhone(phone);
+      if(!n) return [];
+      return data.filter(r=>{
+        const rtel = normalizePhone(r.tel||r.telephone||r.Tel||'');
+        return rtel && (rtel === n || rtel.endsWith(n) || n.endsWith(rtel));
+      });
+    }
+
+    function startCycle(entries){
+      stopCycle();
+      teacherSequence = entries.map(e=>({matiere:e.matiere || '-', classes: (e.classe||'').split(',').map(s=>s.trim()).filter(Boolean)}));
+      if(teacherSequence.length===0){ document.getElementById('cycleBox').innerText='Aucune matière trouvée.'; return; }
+      currentCycleIndex = 0;
+      document.getElementById('cycleBox').innerText = formatCycleItem(teacherSequence[currentCycleIndex]);
+      cycleTimer = setInterval(()=>{
+        currentCycleIndex = (currentCycleIndex+1)%teacherSequence.length;
+        document.getElementById('cycleBox').innerText = formatCycleItem(teacherSequence[currentCycleIndex]);
+      }, 2200);
+    }
+    function stopCycle(){ if(cycleTimer) clearInterval(cycleTimer); cycleTimer = null; }
+    function formatCycleItem(it){ return (it.matiere||'-') + ' · Niveaux: ' + (it.classes.length? it.classes.join(', '): '-'); }
+
+    function buildAdminFilters(){
+      const teachers = new Map();
+      const subjects = new Set();
+      const classes = new Set();
+      data.forEach(r=>{
+        const key = (r.nomPrenom||r.nom||r.name||'').trim();
+        if(key) teachers.set(key, true);
+        if(r.matiere) subjects.add((r.matiere||'').trim());
+        if(r.classe){ r.classe.split(',').forEach(c=>{ if(c&&c.trim()) classes.add(c.trim()); }); }
+      });
+      const tSel = document.getElementById('filterTeacher');
+      const sSel = document.getElementById('filterSubject');
+      const lSel = document.getElementById('filterLevel');
+      [tSel,sSel,lSel].forEach(sel=>{ sel.innerHTML = '<option value="">-- Aucun --</option>'; });
+      Array.from(teachers.keys()).sort((a,b)=>a.localeCompare(b)).forEach(name=>{
+        const o = document.createElement('option'); o.value = name; o.textContent = name; tSel.appendChild(o);
+      });
+      Array.from(subjects).sort().forEach(sub=>{ const o=document.createElement('option'); o.value=sub; o.textContent=sub; sSel.appendChild(o); });
+      Array.from(classes).sort().forEach(cl=>{ const o=document.createElement('option'); o.value=cl; o.textContent=cl; lSel.appendChild(o); });
+    }
+
+    function populateAdminTable(){
+      const tbody = document.querySelector('#adminTable tbody'); tbody.innerHTML='';
+      data.forEach(r=>{
+        const tr = document.createElement('tr');
+        const classes = (r.classe||'').split(',').map(s=>s.trim()).filter(Boolean).join(', ');
+        tr.innerHTML = `
+          <td>${escapeHtml(r.nomPrenom||r.nom||'')}</td>
+          <td class="small">${escapeHtml(r.tel||'')}</td>
+          <td class="small">${escapeHtml(r.mail||r.email||'')}</td>
+          <td>${escapeHtml(r.matiere||'')}</td>
+          <td class="small">${escapeHtml(r.cycle||'')}</td>
+          <td>${escapeHtml(classes)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilters(){
+      const fT = document.getElementById('filterTeacher').value;
+      const fS = document.getElementById('filterSubject').value;
+      const fL = document.getElementById('filterLevel').value;
+      const tbody = document.querySelector('#adminTable tbody'); tbody.innerHTML='';
+      data.forEach(r=>{
+        const classes = (r.classe||'').split(',').map(s=>s.trim()).filter(Boolean);
+        if(fT && (r.nomPrenom||'').trim() !== fT) return;
+        if(fS && (r.matiere||'').trim() !== fS) return;
+        if(fL && !classes.includes(fL)) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(r.nomPrenom||r.nom||'')}</td>
+          <td class="small">${escapeHtml(r.tel||'')}</td>
+          <td class="small">${escapeHtml(r.mail||r.email||'')}</td>
+          <td>${escapeHtml(r.matiere||'')}</td>
+          <td class="small">${escapeHtml(r.cycle||'')}</td>
+          <td>${escapeHtml(classes.join(', '))}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+
+    document.getElementById('btnTeacher').addEventListener('click', ()=>{
+      document.getElementById('viewTeacher').classList.remove('hidden');
+      document.getElementById('viewAdmin').classList.add('hidden');
+      document.getElementById('adminPasswordPrompt').classList.add('hidden');
+    });
+
+    document.getElementById('btnAdmin').addEventListener('click', ()=>{
+      document.getElementById('viewTeacher').classList.add('hidden');
+      document.getElementById('viewAdmin').classList.add('hidden');
+      document.getElementById('adminPasswordPrompt').classList.remove('hidden');
+    });
+
+    document.getElementById('adminLoginBtn').addEventListener('click', ()=>{
+      const pwd = document.getElementById('adminPassword').value;
+      if(pwd === ADMIN_PASSWORD){
+        document.getElementById('adminPasswordPrompt').classList.add('hidden');
+        document.getElementById('viewAdmin').classList.remove('hidden');
+      } else {
+        alert('Mot de passe incorrect.');
+      }
+    });
+
+    document.getElementById('lookupBtn').addEventListener('click', ()=>{
+      const phone = document.getElementById('phoneInput').value.trim();
+      const matches = findByPhone(phone);
+      if(matches.length===0){
+        document.getElementById('teacherResult').classList.add('hidden');
+        document.getElementById('teacherNotFound').classList.remove('hidden');
+        stopCycle();
+        return;
+      }
+      document.getElementById('teacherNotFound').classList.add('hidden');
+      document.getElementById('teacherResult').classList.remove('hidden');
+      const name = matches[0].nomPrenom || matches[0].nom || '';
+      const mail = matches[0].mail || matches[0].email || '';
+      const tel = matches[0].tel || '';
+      const cycles = Array.from(new Set(matches.map(m=>m.cycle||'').filter(Boolean))).join(', ');
+      document.getElementById('teacherName').innerText = name;
+      document.getElementById('teacherMail').innerText = mail;
+      document.getElementById('teacherTel').innerText = tel;
+      document.getElementById('teacherCycles').innerText = cycles || '-';
+      document.getElementById('avatar').innerText = name.split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase() || 'A';
+      startCycle(matches);
+    });
+
+    document.getElementById('clearCycle').addEventListener('click', ()=>{
+      stopCycle();
+      document.getElementById('cycleBox').innerText='Cycle arrêté.';
+    });
+
+    document.getElementById('clearFilters').addEventListener('click', ()=>{
+      document.getElementById('filterTeacher').value='';
+      document.getElementById('filterSubject').value='';
+      document.getElementById('filterLevel').value='';
+      applyFilters();
+    });
+    document.getElementById('filterTeacher').addEventListener('change', applyFilters);
+    document.getElementById('filterSubject').addEventListener('change', applyFilters);
+    document.getElementById('filterLevel').addEventListener('change', applyFilters);
+
+    loadData();
+  </script>
+</body>
+</html>
