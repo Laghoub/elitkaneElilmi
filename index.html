@@ -3,6 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- jsPDF AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
   <title>Interface Répartition — Enseignants / Administration</title>
   <style>
     :root {
@@ -259,12 +265,14 @@
     </div>
 
     <div id="viewAdmin" class="panel hidden">
-      <div class="filters">
-        <select id="filterTeacher"><option value="">-- Filtrer par enseignant --</option></select>
-        <select id="filterSubject"><option value="">-- Filtrer par matière --</option></select>
-        <select id="filterLevel"><option value="">-- Filtrer par niveau (classe) --</option></select>
-        <button id="clearFilters" class="btn secondary">Réinitialiser</button>
-      </div>
+     <div class="filters">
+  <select id="filterTeacher"><option value="">-- Filtrer par enseignant --</option></select>
+  <select id="filterSubject"><option value="">-- Filtrer par matière --</option></select>
+  <select id="filterLevel"><option value="">-- Filtrer par niveau (classe) --</option></select>
+  <button id="clearFilters" class="btn secondary">Réinitialiser</button>
+  <button id="exportPdf" class="btn primary">Exporter PDF</button>
+</div>
+      
 
       <div id="adminTableWrap">
         <table id="adminTable">
@@ -448,6 +456,50 @@
     document.getElementById('filterLevel').addEventListener('change', applyFilters);
 
     loadData();
+
+    document.getElementById("exportPdf").addEventListener("click", () => {
+  const doc = new window.jspdf.jsPDF();
+
+
+  // Titre
+  doc.setFontSize(16);
+  doc.text("Liste des enseignants", 14, 15);
+
+  // Récupération des en-têtes du tableau HTML
+  const headers = [];
+  document.querySelectorAll("#adminTable thead th").forEach(th => {
+    headers.push(th.innerText);
+  });
+
+  // Récupération des données visibles
+  const rows = [];
+  document.querySelectorAll("#adminTable tbody tr").forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll("td")).map(td => td.innerText);
+    rows.push(cells);
+  });
+
+  if (rows.length === 0) {
+    alert("Aucune donnée à exporter !");
+    return;
+  }
+
+  // Générer le tableau avec AutoTable
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 25,
+    styles: { fontSize: 10, halign: "left" },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: "bold" }, // bleu, texte blanc
+    alternateRowStyles: { fillColor: [240, 240, 240] }, // gris clair
+    tableLineColor: [200, 200, 200],
+    tableLineWidth: 0.1
+  });
+
+  // Sauvegarde
+  doc.save("enseignants.pdf");
+});
+
+
   </script>
 </body>
 </html>

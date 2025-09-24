@@ -109,7 +109,7 @@
     "matiere": "Arabe",
     "mail": "dornibrass@gmail.com",
     "tel": "0550691286",
-    "classe": "3AS,3MT,3GE"
+    "classe": "3AS,3MT,3GE, 2GE"
   },
   {
     "nomPrenom": "Djidjeli zakarya",
@@ -317,7 +317,7 @@
     "matiere": "Arabe",
     "mail": null,
     "tel": null,
-    "classe": "2AM,3AM"
+    "classe": "1AM,3AM"
   },
   {
     "nomPrenom": "Arbouche",
@@ -357,7 +357,7 @@
     "matiere": "Arabe",
     "mail": null,
     "tel": null,
-    "classe": null
+    "classe": "2AM, 2AS, 3AL"
   },
   {
     "nomPrenom": "Hamadou",
