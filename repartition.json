@@ -96,12 +96,36 @@
     "classe": "3AS,3MT,1AL"
   },
   {
-    "nomPrenom": "DERROUCHE Samir",
+    "nomPrenom": "Jenndi Youcef",
     "cycle ": "cycle secondaire",
     "matiere": "Sciences Islamiques",
     "mail": "samirecole155@gmail.com",
     "tel": "0697130594",
     "classe": "1AS,1AL,2AS,2GE,2AL"
+  },
+  {
+    "nomPrenom": "Machou",
+    "cycle ": "cycle secondaire",
+    "matiere": "Arabe",
+    "mail": "",
+    "tel": "",
+    "classe": "1AS,1AL"
+  },
+  {
+    "nomPrenom": "Menasria Lina",
+    "cycle ": "cycle secondaire",
+    "matiere": "Anglais",
+    "mail": "",
+    "tel": "",
+    "classe": "1AS,1AL"
+  },
+  {
+    "nomPrenom": "Techno",
+    "cycle ": "cycle secondaire",
+    "matiere": "Techno",
+    "mail": "",
+    "tel": "",
+    "classe": "1AS"
   },
   {
     "nomPrenom": "Dilmi yahia",
@@ -110,6 +134,14 @@
     "mail": "dornibrass@gmail.com",
     "tel": "0550691286",
     "classe": "3AS,3MT,3GE,2GE"
+  },
+  {
+    "nomPrenom": "Ammara",
+    "cycle ": "cycle secondaire",
+    "matiere": "Anglais",
+    "mail": "",
+    "tel": "",
+    "classe": "3GE"
   },
   {
     "nomPrenom": "Djidjeli zakarya",
@@ -189,7 +221,15 @@
     "matiere": "Sciences de la nature ",
     "mail": "Samira19lamri@gmail.com 0554864979",
     "tel": "0554864979",
-    "classe": "2AM,3AM"
+    "classe": "2AM"
+  },
+  {
+    "nomPrenom": "Harzi Manel ",
+    "cycle ": "cycle moyen",
+    "matiere": "Sciences de la nature ",
+    "mail": "Samira19lamri@gmail.com 0554864979",
+    "tel": "0554864979",
+    "classe": "3AM"
   },
   {
     "nomPrenom": "LEBBAD Aziza Rima",
@@ -317,7 +357,15 @@
     "matiere": "Arabe",
     "mail": null,
     "tel": null,
-    "classe": "1AM,3AM"
+    "classe": "1AM,2AM"
+  },
+  {
+    "nomPrenom": "Mouhoub Nouredine ",
+    "cycle ": "cycle moyen",
+    "matiere": "Sport",
+    "mail": "noureddinemouhoub1921@gmail.com",
+    "tel": "+213 541 08 97 51",
+    "classe": "3AM,4AM"
   },
   {
     "nomPrenom": "Arbouche",
@@ -357,7 +405,7 @@
     "matiere": "Arabe",
     "mail": null,
     "tel": null,
-    "classe": "2AM,2AS,3AL"
+    "classe": "2AL,2AS,3AL"
   },
   {
     "nomPrenom": "Hamadou",
